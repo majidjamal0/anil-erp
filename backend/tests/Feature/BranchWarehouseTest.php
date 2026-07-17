@@ -2,6 +2,7 @@
 
 use App\Models\Branch;
 use App\Models\Warehouse;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Str;
 
 it('relates UUID warehouses to their branch', function (): void {
@@ -17,5 +18,5 @@ it('prevents deleting a branch that has a warehouse', function (): void {
     $branch = Branch::create(['code' => 'TEH-02', 'name' => 'Tehran 2']);
     Warehouse::create(['branch_id' => $branch->id, 'code' => 'TEH-W02', 'name' => 'Reserve']);
 
-    expect(fn () => $branch->forceDelete())->toThrow(Throwable::class);
+    expect(fn () => $branch->forceDelete())->toThrow(QueryException::class);
 });
