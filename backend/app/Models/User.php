@@ -21,6 +21,11 @@ class User extends Authenticatable
 
     protected $hidden = ['password', 'remember_token'];
 
+    public function isActive(): bool
+    {
+        return $this->is_active;
+    }
+
     protected function casts(): array
     {
         return [

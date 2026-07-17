@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, codex/create-initial-monorepo-foundation]
+    branches: [main, codex/create-initial-monorepo-foundation, codex/sprint-2-auth-users-rbac]
   pull_request:
     branches: [main]
 
@@ -66,6 +66,7 @@ jobs:
         with:
           node-version: 22
       - run: npm install
+      - run: npm run format:check
       - run: npm run lint
       - run: npm run type-check
       - run: npm test

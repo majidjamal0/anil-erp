@@ -24,3 +24,12 @@
 ## Cross-cutting accounting rules
 
 Financial values must be fixed-precision decimals with currency recorded explicitly at domain boundaries. Rounding policy belongs to the finance module and must never depend on binary floating point. Server state and audit timestamps are UTC; Persian calendar/date and number formatting are presentation concerns.
+
+## Identity and authorization rules
+
+1. Only active users may establish or continue an authenticated API session.
+2. Authorization is deny-by-default. User operations require the matching `users.*` permission; RBAC operations require the `manage-rbac` gate.
+3. Super Admin bypasses application gates and policies. Its role cannot be renamed or deleted.
+4. A user cannot delete their own account. Passwords require confirmation and Laravel's configured password defaults.
+5. Role changes and user lifecycle operations are audited with actor and request context.
+6. Forgot-password responses do not reveal whether an email address exists.

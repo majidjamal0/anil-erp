@@ -27,3 +27,22 @@ A dependency failure produces HTTP `500` through Laravel's exception handling an
 ## Planned endpoints
 
 Identity, branches, warehouses, products, inventory, customers, sales, finance, HR, production, and reporting endpoints are intentionally deferred. They must be documented here before implementation, including request/response schemas, permission names, pagination, idempotency, and audit behavior.
+
+## Sprint 2 — Authentication and RBAC
+
+All endpoints use JSON. Browser authentication uses Sanctum's stateful session flow: first request `GET /sanctum/csrf-cookie`, then send credentials with cookies and the XSRF header.
+
+| Method | Endpoint | Access | Purpose |
+|---|---|---|---|
+| POST | `/api/auth/login` | Guest | Start a session |
+| POST | `/api/auth/logout` | Authenticated | End the session |
+| GET | `/api/auth/user` | Authenticated, active | Current user, roles and permissions |
+| POST | `/api/auth/forgot-password` | Guest | Send reset link |
+| POST | `/api/auth/reset-password` | Guest | Reset with token |
+| PUT | `/api/auth/password` | Authenticated | Change password |
+| REST | `/api/users` | Policy protected | User CRUD |
+| POST/DELETE | `/api/users/{user}/roles[/{role}]` | `users.update` | Assign/remove role |
+| REST | `/api/roles` | `manage-rbac` gate | Role CRUD |
+| REST | `/api/permissions` | `manage-rbac` gate | Permission CRUD |
+
+Validation failures return HTTP 422 with `message` and field-keyed `errors`. Unauthenticated and unauthorized requests return 401 and 403 respectively. Resources are returned under `data`; collections additionally contain pagination links and metadata.
