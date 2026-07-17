@@ -1,3 +1,54 @@
 <?php
-use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema;
-return new class extends Migration { public function up(): void { Schema::create('permissions', fn (Blueprint $t) => [$t->uuid('id')->primary(), $t->string('name'), $t->string('guard_name'), $t->timestampsTz(), $t->unique(['name','guard_name'])]); Schema::create('roles', fn (Blueprint $t) => [$t->uuid('id')->primary(), $t->string('name'), $t->string('guard_name'), $t->timestampsTz(), $t->unique(['name','guard_name'])]); Schema::create('model_has_permissions', fn (Blueprint $t) => [$t->uuid('permission_id'), $t->string('model_type'), $t->uuid('model_id'), $t->index(['model_id','model_type']), $t->foreign('permission_id')->references('id')->on('permissions')->cascadeOnDelete(), $t->primary(['permission_id','model_id','model_type'])]); Schema::create('model_has_roles', fn (Blueprint $t) => [$t->uuid('role_id'), $t->string('model_type'), $t->uuid('model_id'), $t->index(['model_id','model_type']), $t->foreign('role_id')->references('id')->on('roles')->cascadeOnDelete(), $t->primary(['role_id','model_id','model_type'])]); Schema::create('role_has_permissions', fn (Blueprint $t) => [$t->uuid('permission_id'), $t->uuid('role_id'), $t->foreign('permission_id')->references('id')->on('permissions')->cascadeOnDelete(), $t->foreign('role_id')->references('id')->on('roles')->cascadeOnDelete(), $t->primary(['permission_id','role_id'])]); } public function down(): void { foreach (['role_has_permissions','model_has_roles','model_has_permissions','roles','permissions'] as $table) Schema::dropIfExists($table); } };
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('permissions', function (Blueprint $table): void {
+            $table->uuid('id')->primary();
+            $table->string('name');
+            $table->string('guard_name');
+            $table->timestampsTz();
+            $table->unique(['name', 'guard_name']);
+        });
+        Schema::create('roles', function (Blueprint $table): void {
+            $table->uuid('id')->primary();
+            $table->string('name');
+            $table->string('guard_name');
+            $table->timestampsTz();
+            $table->unique(['name', 'guard_name']);
+        });
+        Schema::create('model_has_permissions', function (Blueprint $table): void {
+            $table->foreignUuid('permission_id')->constrained()->cascadeOnDelete();
+            $table->string('model_type');
+            $table->uuid('model_id');
+            $table->index(['model_id', 'model_type']);
+            $table->primary(['permission_id', 'model_id', 'model_type']);
+        });
+        Schema::create('model_has_roles', function (Blueprint $table): void {
+            $table->foreignUuid('role_id')->constrained()->cascadeOnDelete();
+            $table->string('model_type');
+            $table->uuid('model_id');
+            $table->index(['model_id', 'model_type']);
+            $table->primary(['role_id', 'model_id', 'model_type']);
+        });
+        Schema::create('role_has_permissions', function (Blueprint $table): void {
+            $table->foreignUuid('permission_id')->constrained()->cascadeOnDelete();
+            $table->foreignUuid('role_id')->constrained()->cascadeOnDelete();
+            $table->primary(['permission_id', 'role_id']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('role_has_permissions');
+        Schema::dropIfExists('model_has_roles');
+        Schema::dropIfExists('model_has_permissions');
+        Schema::dropIfExists('roles');
+        Schema::dropIfExists('permissions');
+    }
+};

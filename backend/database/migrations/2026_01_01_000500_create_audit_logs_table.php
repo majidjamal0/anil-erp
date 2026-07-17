@@ -1,3 +1,29 @@
 <?php
-use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema;
-return new class extends Migration { public function up(): void { Schema::create('audit_logs', function(Blueprint $t) { $t->uuid('id')->primary(); $t->foreignUuid('user_id')->nullable()->constrained()->nullOnDelete(); $t->string('event'); $t->nullableUuidMorphs('auditable'); $t->jsonb('old_values')->nullable(); $t->jsonb('new_values')->nullable(); $t->ipAddress('ip_address')->nullable(); $t->text('user_agent')->nullable(); $t->timestampTz('created_at')->useCurrent(); $t->index(['event','created_at']); }); } public function down(): void { Schema::dropIfExists('audit_logs'); } };
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('audit_logs', function (Blueprint $table): void {
+            $table->uuid('id')->primary();
+            $table->foreignUuid('user_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('event');
+            $table->nullableUuidMorphs('auditable');
+            $table->json('old_values')->nullable();
+            $table->json('new_values')->nullable();
+            $table->ipAddress('ip_address')->nullable();
+            $table->text('user_agent')->nullable();
+            $table->timestampTz('created_at')->useCurrent();
+            $table->index(['event', 'created_at']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('audit_logs');
+    }
+};

@@ -1,2 +1,11 @@
 <?php
-it('reports API health', function () { $this->getJson('/api/health')->assertOk()->assertJsonPath('status', 'ok'); });
+
+it('reports API and database readiness', function (): void {
+    $this->getJson('/api/health')
+        ->assertOk()
+        ->assertJson([
+            'status' => 'ok',
+            'service' => 'anil-erp-api',
+        ])
+        ->assertJsonStructure(['timestamp']);
+});
