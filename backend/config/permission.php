@@ -1,9 +1,12 @@
 <?php
 
+use App\Models\Permission;
+use App\Models\Role;
+
 return [
     'models' => [
-        'permission' => App\Models\Permission::class,
-        'role' => App\Models\Role::class,
+        'permission' => Permission::class,
+        'role' => Role::class,
     ],
     'table_names' => [
         'roles' => 'roles',
