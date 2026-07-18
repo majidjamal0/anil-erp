@@ -46,3 +46,7 @@ All endpoints use JSON. Browser authentication uses Sanctum's stateful session f
 | REST | `/api/permissions` | `manage-rbac` gate | Permission CRUD |
 
 Validation failures return HTTP 422 with `message` and field-keyed `errors`. Unauthenticated and unauthorized requests return 401 and 403 respectively. Resources are returned under `data`; collections additionally contain pagination links and metadata.
+
+## Sprint 3 organization APIs
+
+Authenticated `/api` endpoints include RESTful CRUD for `/companies`, `/branches`, `/warehouse-types`, `/warehouses`, and `/sales-channels`. They support pagination plus `company_id`, `branch_id`, `type`, `is_active`, and `q` filters where applicable. `/organization/context` returns current user organizational visibility. `/users/{user}/organization-access` reads and updates company, branch, and warehouse assignments transactionally.

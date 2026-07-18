@@ -17,3 +17,7 @@ Seeded roles are Super Admin, Administrator, Branch Manager, Warehouse Manager, 
 ## Security operations
 
 Use HTTPS, secure/session-only cookies, production stateful-domain settings, and rate limiting. Replace the seed administrator password immediately. Audit entries capture authentication-sensitive and user-management events without recording passwords or tokens.
+
+## Sprint 3 permissions
+
+Organization permissions are `companies.*`, `branches.*`, `warehouses.*`, `warehouse_types.manage`, `sales_channels.*`, and `organization.assign_access`. Super Admin has global access; operational roles rely on explicit company, branch, and warehouse assignments in addition to permission checks.

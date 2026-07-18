@@ -24,6 +24,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'warehouses.manage',
             'sales.manage',
             'accounting.manage',
+            'companies.view','companies.create','companies.update','companies.delete',
+            'branches.view','branches.create','branches.update','branches.delete',
+            'warehouses.view','warehouses.create','warehouses.update','warehouses.delete',
+            'warehouse_types.manage',
+            'sales_channels.view','sales_channels.create','sales_channels.update','sales_channels.delete',
+            'organization.assign_access',
         ];
 
         foreach ($permissions as $name) {
@@ -33,10 +39,10 @@ class RolesAndPermissionsSeeder extends Seeder
         $roles = [
             'Super Admin' => $permissions,
             'Administrator' => array_slice($permissions, 0, 8),
-            'Branch Manager' => ['users.view', 'branches.manage', 'sales.manage'],
-            'Warehouse Manager' => ['users.view', 'warehouses.manage'],
-            'Salesperson' => ['sales.manage'],
-            'Accountant' => ['accounting.manage'],
+            'Branch Manager' => ['users.view', 'branches.view', 'branches.update', 'warehouses.view', 'sales_channels.view', 'sales.manage'],
+            'Warehouse Manager' => ['users.view', 'warehouses.view', 'warehouses.update'],
+            'Salesperson' => ['branches.view', 'warehouses.view', 'sales_channels.view', 'sales.manage'],
+            'Accountant' => ['companies.view', 'branches.view', 'warehouses.view', 'sales_channels.view', 'accounting.manage'],
         ];
 
         foreach ($roles as $name => $grants) {

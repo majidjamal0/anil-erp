@@ -1,0 +1,76 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\{Branch, Company, SalesChannel, User, Warehouse, WarehouseType};
+use App\Services\AuditLogger;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+
+class OrganizationResourceController extends Controller
+{
+    public function __construct(private readonly AuditLogger $audit) {}
+
+    public function index(Request $request): JsonResponse
+    {
+        $resource = $request->route('resource');
+        $this->authorizePermission($resource, 'view');
+        $query = $this->model($resource)::query()->with($this->with($resource));
+        foreach (['company_id','branch_id','type','is_active'] as $filter) if ($request->filled($filter)) $query->where($filter, $request->boolean($filter, null) ?? $request->input($filter));
+        if ($request->filled('q')) $query->where(fn ($q) => $q->where('name','like','%'.$request->q.'%')->orWhere('code','like','%'.$request->q.'%'));
+        $this->scopeVisible($query, $request->user(), $resource);
+        return response()->json($query->orderBy('sort_order')->orderBy('name')->paginate(min((int) $request->input('per_page', 15), 100)));
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        $resource = $request->route('resource');
+        $this->authorizePermission($resource, 'create');
+        $data = $this->validateData($request, $resource);
+        $model = DB::transaction(fn () => tap($this->model($resource)::create($data), fn ($m) => $this->audit->log($resource.'.created', $m, null, $m->toArray())));
+        return response()->json($model->load($this->with($resource)), 201);
+    }
+
+    public function show(Request $request, string $id): JsonResponse
+    {
+        $resource = $request->route('resource');
+        $this->authorizePermission($resource, 'view');
+        $model = $this->model($resource)::with($this->with($resource))->findOrFail($id);
+        abort_unless($this->canSee($request->user(), $model), 403);
+        return response()->json($model);
+    }
+
+    public function update(Request $request, string $id): JsonResponse
+    {
+        $resource = $request->route('resource');
+        $this->authorizePermission($resource, 'update');
+        $model = $this->model($resource)::findOrFail($id); abort_unless($this->canSee($request->user(), $model), 403);
+        $data = $this->validateData($request, $resource, $model); $old = $model->toArray();
+        if (isset($data['company_id']) && isset($model->company_id) && $data['company_id'] !== $model->company_id) abort(422, 'Company cannot be changed.');
+        DB::transaction(function () use ($model, $data, $old, $resource): void { $model->update($data); $this->audit->log($resource.'.updated', $model, $old, $model->fresh()->toArray()); });
+        return response()->json($model->fresh()->load($this->with($resource)));
+    }
+
+    public function destroy(Request $request, string $id): JsonResponse
+    {
+        $resource = $request->route('resource');
+        $this->authorizePermission($resource, 'delete');
+        $model = $this->model($resource)::findOrFail($id); abort_unless($this->canSee($request->user(), $model), 403);
+        if ($model instanceof Branch && $model->warehouses()->where('is_active', true)->exists()) return response()->json(['message'=>'Active warehouses block branch deletion.'], 409);
+        DB::transaction(function () use ($model, $resource): void { $old=$model->toArray(); $model->delete(); $this->audit->log($resource.'.deleted', $model, $old, null); });
+        return response()->json(null, 204);
+    }
+
+    private function model(string $r): string { return ['companies'=>Company::class,'branches'=>Branch::class,'warehouse-types'=>WarehouseType::class,'warehouses'=>Warehouse::class,'sales-channels'=>SalesChannel::class][$r] ?? abort(404); }
+    private function with(string $r): array { return match($r){'branches'=>['company','parent'],'warehouses'=>['company','branch','type'],'warehouse-types'=>['company'],'sales-channels'=>['company','branch','defaultWarehouse'],default=>[]}; }
+    private function permBase(string $r): string { return str_replace('-', '_', $r); }
+    private function authorizePermission(string $r, string $a): void { $perm=$this->permBase($r).($r==='warehouse-types'?'.manage':'.'.$a); abort_unless(auth()->user()?->can($perm) || auth()->user()?->hasRole('Super Admin'), 403); }
+    private function scopeVisible($q, User $u, string $r): void { if ($u->hasGlobalOrganizationAccess()) return; if ($r==='companies') $q->whereIn('id',$u->companies()->pluck('companies.id')); elseif ($r==='branches') $q->whereIn('id',$u->branches()->pluck('branches.id')); elseif ($r==='warehouses') $q->whereIn('id',$u->warehouses()->pluck('warehouses.id')); else $q->whereIn('company_id',$u->companies()->pluck('companies.id')); }
+    private function canSee(User $u, Model $m): bool { if ($u->hasGlobalOrganizationAccess()) return true; if ($m instanceof Company) return $u->companies()->whereKey($m->id)->exists(); if ($m instanceof Branch) return $u->branches()->whereKey($m->id)->exists() || $u->companies()->whereKey($m->company_id)->exists(); if ($m instanceof Warehouse) return $u->warehouses()->whereKey($m->id)->exists() || $u->companies()->whereKey($m->company_id)->exists(); return isset($m->company_id) && $u->companies()->whereKey($m->company_id)->exists(); }
+    private function validateData(Request $r, string $res, ?Model $m=null): array { $base=['companies'=>['name'=>'required|string','code'=>'required|string','email'=>'nullable|email','is_active'=>'boolean','settings'=>'nullable|array'],'branches'=>['company_id'=>'required|exists:companies,id','name'=>'required|string','code'=>'required|string','type'=>['required',Rule::in(Branch::TYPES)],'parent_id'=>'nullable|exists:branches,id','manager_user_id'=>'nullable|exists:users,id','is_active'=>'boolean','is_operational'=>'boolean','is_external'=>'boolean','metadata'=>'nullable|array'],'warehouse-types'=>['company_id'=>'required|exists:companies,id','name'=>'required|string','code'=>'required|string','is_active'=>'boolean'],'warehouses'=>['company_id'=>'required|exists:companies,id','branch_id'=>'nullable|exists:branches,id','warehouse_type_id'=>'required|exists:warehouse_types,id','name'=>'required|string','code'=>'required|string','is_active'=>'boolean','is_sellable'=>'boolean','is_shippable'=>'boolean','metadata'=>'nullable|array'],'sales-channels'=>['company_id'=>'required|exists:companies,id','branch_id'=>'nullable|exists:branches,id','name'=>'required|string','code'=>'required|string','type'=>['required',Rule::in(SalesChannel::TYPES)],'requires_warehouse_selection'=>'boolean','default_warehouse_id'=>'nullable|exists:warehouses,id','settings'=>'nullable|array']]; $data=$r->validate($base[$res]); if (in_array($data['type'] ?? '', ['website','social']) && !($data['requires_warehouse_selection'] ?? false)) abort(422,'Online/social channels require warehouse selection.'); return $data + Arr::only($r->all(), ['legal_name','national_id','economic_code','phone','address','city','province','postal_code','description','sort_order','allocation_priority','default_locale','default_currency','timezone']); }
+}
