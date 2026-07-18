@@ -1,5 +1,5 @@
 :root {
-  font-family: Tahoma,Arial,sans-serif;
+  font-family: Tahoma, Arial, sans-serif;
   color: #172033;
   background: #f4f7fb;
   direction: rtl;
@@ -14,7 +14,8 @@ body {
   margin: 0;
 }
 
-button,input {
+button,
+input {
   font: inherit;
 }
 
@@ -107,12 +108,14 @@ h1 {
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit,minmax(230px,1fr));
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
   gap: 1rem;
   margin-top: 2rem;
 }
 
-.stats article,.card,.table-wrap {
+.stats article,
+.card,
+.table-wrap {
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 14px;
@@ -133,11 +136,11 @@ h1 {
   min-height: 100vh;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg,#172554,#2563eb);
+  background: linear-gradient(135deg, #172554, #2563eb);
 }
 
 .card {
-  width: min(420px,calc(100vw - 2rem));
+  width: min(420px, calc(100vw - 2rem));
   display: grid;
   gap: 1rem;
 }
