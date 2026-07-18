@@ -22,23 +22,27 @@ class AuthController extends Controller
     {
         $credentials = $request->safe()->only('email', 'password');
 
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+        $authenticated = $request->hasSession()
+            ? Auth::attempt($credentials, $request->boolean('remember'))
+            : Auth::once($credentials);
+
+        if (! $authenticated) {
             throw ValidationException::withMessages([
                 'email' => [__('auth.failed')],
             ]);
         }
 
         if (! $request->user()->isActive()) {
-            Auth::logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
+            $this->logoutWebGuard($request, invalidateSession: true);
 
             throw ValidationException::withMessages([
                 'email' => [__('messages.inactive_account')],
             ]);
         }
 
-        $request->session()->regenerate();
+        if ($request->hasSession()) {
+            $request->session()->regenerate();
+        }
         $this->audit($request, 'auth.login');
 
         return new UserResource($request->user()->load('roles.permissions'));
@@ -47,9 +51,14 @@ class AuthController extends Controller
     public function logout(Request $request): JsonResponse
     {
         $this->audit($request, 'auth.logout');
-        Auth::guard('web')->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+
+        $token = $request->user()?->currentAccessToken();
+
+        if ($token !== null && method_exists($token, 'delete')) {
+            $token->delete();
+        }
+
+        $this->logoutWebGuard($request, invalidateSession: true);
 
         return response()->json(['message' => __('messages.logged_out')]);
     }
@@ -104,6 +113,22 @@ class AuthController extends Controller
         $this->audit($request, 'auth.password_changed');
 
         return response()->json(['message' => __('messages.password_changed')]);
+    }
+
+    private function logoutWebGuard(Request $request, bool $invalidateSession = false): void
+    {
+        if (! $request->hasSession()) {
+            Auth::guard('web')->forgetUser();
+
+            return;
+        }
+
+        Auth::guard('web')->logout();
+
+        if ($invalidateSession) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
     }
 
     private function audit(Request $request, string $event): void

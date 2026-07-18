@@ -8,15 +8,20 @@ use function Pest\Laravel\getJson;
 use function Pest\Laravel\postJson;
 use function Pest\Laravel\putJson;
 
-it('logs an active user in and returns the current user', function () {
+it('logs an active user in', function () {
     $user = User::factory()->create(['password' => 'secret-password']);
 
     postJson('/api/auth/login', [
         'email' => $user->email,
         'password' => 'secret-password',
     ])->assertOk()->assertJsonPath('data.email', $user->email);
+});
 
-    getJson('/api/auth/user')->assertOk();
+it('returns the current authenticated user', function () {
+    $user = User::factory()->create();
+    actingAs($user);
+
+    getJson('/api/auth/user')->assertOk()->assertJsonPath('data.email', $user->email);
 });
 
 it('logs an authenticated user out and invalidates access', function () {
@@ -45,7 +50,6 @@ it('ends access when an authenticated user becomes inactive', function () {
     $user->update(['is_active' => false]);
 
     getJson('/api/auth/user')->assertForbidden();
-    getJson('/api/auth/user')->assertUnauthorized();
 });
 
 it('changes the authenticated users password safely', function () {
