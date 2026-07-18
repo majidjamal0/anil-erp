@@ -25,15 +25,19 @@ it('returns the current authenticated user', function () {
 });
 
 it('logs an authenticated user out and invalidates access', function () {
-    config(['sanctum.stateful' => ['localhost']]);
+    config(['sanctum.stateful' => ['localhost', 'localhost:80']]);
 
     $user = User::factory()->create(['password' => 'secret-password']);
     $headers = [
         'Origin' => 'http://localhost',
-        'Referer' => 'http://localhost',
+        'Referer' => 'http://localhost/',
+        'X-Requested-With' => 'XMLHttpRequest',
     ];
 
-    $this->withSession([]);
+    $this->withServerVariables([
+        'HTTP_ORIGIN' => 'http://localhost',
+        'HTTP_REFERER' => 'http://localhost/',
+    ])->withSession([]);
 
     postJson('/api/auth/login', [
         'email' => $user->email,

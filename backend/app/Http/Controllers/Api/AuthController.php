@@ -52,15 +52,18 @@ class AuthController extends Controller
     {
         $this->audit($request, 'auth.logout');
 
-        $token = $request->user()?->currentAccessToken();
+        Auth::guard('web')->logout();
 
-        if ($token !== null && method_exists($token, 'delete')) {
-            $token->delete();
+        if ($request->hasSession()) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
         }
 
-        $this->logoutWebGuard($request, invalidateSession: true);
+        Auth::forgetGuards();
 
-        return response()->json(['message' => __('messages.logged_out')]);
+        return response()->json([
+            'message' => __('messages.logged_out'),
+        ]);
     }
 
     public function user(Request $request): UserResource
