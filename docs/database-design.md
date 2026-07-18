@@ -21,3 +21,9 @@ All timestamps are stored in UTC using timezone-aware columns. Money and quantit
 Branch and warehouse records are soft-deleted. Warehouse-to-branch deletion uses `RESTRICT` to prevent orphaned inventory locations. Audit actors use `SET NULL` so staff deletion does not destroy history. Role/permission assignments cascade when their owning authorization record is deleted.
 
 Future migrations must be reversible, add indexes based on measured access patterns, and be exercised against both PostgreSQL and the SQLite test profile. Production migrations require a backup and rollback plan.
+
+## Sprint 2 identity and access data
+
+`users` uses UUID primary keys and stores unique email, hashed password, locale, activation status, verification and session metadata. Sanctum's `personal_access_tokens` exists for trusted API clients, while the SPA uses server sessions. Password reset tokens are short-lived and keyed by email.
+
+RBAC uses Spatie Permission tables: `roles`, `permissions`, `model_has_roles`, `model_has_permissions`, and `role_has_permissions`. Role and permission identifiers are UUIDs. `audit_logs` records actor, event, polymorphic subject, before/after JSON, IP address, user agent, and creation time. Audit records intentionally survive actor deletion with a nullable user foreign key.

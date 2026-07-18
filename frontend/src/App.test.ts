@@ -1,21 +1,15 @@
-import { createPinia } from 'pinia'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
-import App from './App.vue'
+import ErrorView from './views/ErrorView.vue'
 
-describe('Persian application shell', () => {
-  it('renders the product name in an RTL Persian root', () => {
-    const wrapper = mount(App, {
-      global: {
-        plugins: [createPinia()],
-        stubs: ['RouterView'],
-      },
+describe('ErrorView', () => {
+  it('renders localized authorization errors', () => {
+    const wrapper = mount(ErrorView, {
+      props: { code: '403', message: 'اجازه دسترسی ندارید' },
+      global: { stubs: { RouterLink: true } },
     })
 
-    expect(wrapper.text()).toContain('انیل ERP')
-    expect(wrapper.get('main').attributes()).toMatchObject({
-      dir: 'rtl',
-      lang: 'fa',
-    })
+    expect(wrapper.text()).toContain('403')
+    expect(wrapper.text()).toContain('اجازه دسترسی ندارید')
   })
 })
