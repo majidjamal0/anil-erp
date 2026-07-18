@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('code');
             $table->string('type')->default('retail_branch')->index();
-            $table->foreignUuid('parent_id')->nullable()->constrained('branches')->nullOnDelete();
+            $table->uuid('parent_id')->nullable();
             $table->foreignUuid('manager_user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->string('phone')->nullable();
             $table->string('email')->nullable();
@@ -29,9 +29,20 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->timestampsTz();
             $table->softDeletesTz();
-            $table->unique(['company_id','code']);
-            $table->index(['company_id','is_active','type']);
+            $table->unique(['company_id', 'code']);
+            $table->index(['company_id', 'is_active', 'type']);
+        });
+
+        Schema::table('branches', function (Blueprint $table): void {
+            $table->foreign('parent_id')
+                ->references('id')
+                ->on('branches')
+                ->nullOnDelete();
         });
     }
-    public function down(): void { Schema::dropIfExists('branches'); }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('branches');
+    }
 };
