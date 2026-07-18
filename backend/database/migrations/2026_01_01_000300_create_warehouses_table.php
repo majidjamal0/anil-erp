@@ -25,9 +25,13 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->timestampsTz();
             $table->softDeletesTz();
-            $table->unique(['company_id','code']);
-            $table->index(['company_id','branch_id','is_active']);
+            $table->unique(['company_id', 'code']);
+            $table->index(['company_id', 'branch_id', 'is_active']);
         });
     }
-    public function down(): void { Schema::dropIfExists('warehouses'); }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('warehouses');
+    }
 };

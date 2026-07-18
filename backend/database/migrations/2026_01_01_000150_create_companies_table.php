@@ -28,5 +28,9 @@ return new class extends Migration
             $table->softDeletesTz();
         });
     }
-    public function down(): void { Schema::dropIfExists('companies'); }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('companies');
+    }
 };

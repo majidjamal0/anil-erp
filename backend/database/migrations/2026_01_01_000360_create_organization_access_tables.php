@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        foreach (['company_user'=>'company_id','branch_user'=>'branch_id','user_warehouse'=>'warehouse_id'] as $table => $foreign) {
+        foreach (['company_user' => 'company_id', 'branch_user' => 'branch_id', 'user_warehouse' => 'warehouse_id'] as $table => $foreign) {
             Schema::create($table, function (Blueprint $t) use ($table, $foreign): void {
                 $t->uuid('id')->primary();
                 $t->foreignUuid('user_id')->constrained()->cascadeOnDelete();
@@ -23,6 +23,8 @@ return new class extends Migration
     }
     public function down(): void
     {
-        Schema::dropIfExists('user_warehouse'); Schema::dropIfExists('branch_user'); Schema::dropIfExists('company_user');
+        Schema::dropIfExists('user_warehouse');
+        Schema::dropIfExists('branch_user');
+        Schema::dropIfExists('company_user');
     }
 };

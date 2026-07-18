@@ -23,8 +23,12 @@ return new class extends Migration
             $table->unsignedInteger('sort_order')->default(100);
             $table->timestampsTz();
             $table->softDeletesTz();
-            $table->unique(['company_id','code']);
+            $table->unique(['company_id', 'code']);
         });
     }
-    public function down(): void { Schema::dropIfExists('warehouse_types'); }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('warehouse_types');
+    }
 };
