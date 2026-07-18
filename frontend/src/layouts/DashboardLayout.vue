@@ -22,6 +22,27 @@ async function logout() {
         <RouterLink v-if="auth.can('users.view')" to="/users">کاربران</RouterLink>
         <RouterLink v-if="auth.can('roles.manage')" to="/roles">نقش‌ها</RouterLink>
         <RouterLink v-if="auth.can('permissions.manage')" to="/permissions"> مجوزها </RouterLink>
+        <section class="nav-group" aria-label="سازمان">
+          <strong>سازمان</strong>
+          <RouterLink v-if="auth.can('companies.view')" to="/organization/companies"
+            >شرکت‌ها</RouterLink
+          >
+          <RouterLink v-if="auth.can('branches.view')" to="/organization/branches"
+            >شعب و واحدها</RouterLink
+          >
+          <RouterLink v-if="auth.can('warehouses.view')" to="/organization/warehouses"
+            >انبارها</RouterLink
+          >
+          <RouterLink v-if="auth.can('warehouse_types.manage')" to="/organization/warehouse-types"
+            >انواع انبار</RouterLink
+          >
+          <RouterLink v-if="auth.can('sales_channels.view')" to="/organization/sales-channels"
+            >کانال‌های فروش</RouterLink
+          >
+          <RouterLink v-if="auth.can('organization.assign_access')" to="/organization/access"
+            >دسترسی سازمانی کاربران</RouterLink
+          >
+        </section>
       </nav>
     </aside>
 

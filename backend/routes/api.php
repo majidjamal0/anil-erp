@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\OrganizationAccessController;
+use App\Http\Controllers\Api\OrganizationResourceController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserController;
@@ -34,6 +36,16 @@ Route::middleware(['auth:sanctum', 'active'])->group(function (): void {
     Route::put('auth/password', [AuthController::class, 'changePassword']);
 
     Route::apiResource('users', UserController::class);
+    foreach (['companies', 'branches', 'warehouse-types', 'warehouses', 'sales-channels'] as $resource) {
+        Route::get($resource, [OrganizationResourceController::class, 'index'])->defaults('resource', $resource);
+        Route::post($resource, [OrganizationResourceController::class, 'store'])->defaults('resource', $resource);
+        Route::get($resource.'/{id}', [OrganizationResourceController::class, 'show'])->defaults('resource', $resource);
+        Route::match(['put', 'patch'], $resource.'/{id}', [OrganizationResourceController::class, 'update'])->defaults('resource', $resource);
+        Route::delete($resource.'/{id}', [OrganizationResourceController::class, 'destroy'])->defaults('resource', $resource);
+    }
+    Route::get('organization/context', [OrganizationAccessController::class, 'context']);
+    Route::get('users/{user}/organization-access', [OrganizationAccessController::class, 'show']);
+    Route::put('users/{user}/organization-access', [OrganizationAccessController::class, 'update']);
     Route::post('users/{user}/roles', [UserController::class, 'assignRole'])
         ->middleware('permission:users.update');
     Route::delete('users/{user}/roles/{role}', [UserController::class, 'removeRole'])

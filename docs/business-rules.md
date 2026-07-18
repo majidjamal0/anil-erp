@@ -33,3 +33,7 @@ Financial values must be fixed-precision decimals with currency recorded explici
 4. A user cannot delete their own account. Passwords require confirmation and Laravel's configured password defaults.
 5. Role changes and user lifecycle operations are audited with actor and request context.
 6. Forgot-password responses do not reveal whether an email address exists.
+
+## Sprint 3 organization rules
+
+All organizational records are company-scoped. Client-provided `company_id`, `branch_id`, and `warehouse_id` values are validated and authorized server-side to prevent cross-company access. Warehouses cannot be moved between companies. Branch deletion returns a conflict when active warehouses exist. Online and social sales channels require warehouse selection while remaining separate from warehouses.

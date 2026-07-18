@@ -260,3 +260,14 @@ td {
     display: none;
   }
 }
+.nav-group {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+.nav-group strong {
+  color: #cbd5e1;
+  font-size: 0.85rem;
+}
