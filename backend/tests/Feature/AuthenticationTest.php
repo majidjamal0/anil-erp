@@ -25,11 +25,24 @@ it('returns the current authenticated user', function () {
 });
 
 it('logs an authenticated user out and invalidates access', function () {
-    $user = User::factory()->create();
-    actingAs($user);
+    config(['sanctum.stateful' => ['localhost']]);
 
-    postJson('/api/auth/logout')->assertOk();
-    getJson('/api/auth/user')->assertUnauthorized();
+    $user = User::factory()->create(['password' => 'secret-password']);
+    $headers = [
+        'Origin' => 'http://localhost',
+        'Referer' => 'http://localhost',
+    ];
+
+    $this->withSession([]);
+
+    postJson('/api/auth/login', [
+        'email' => $user->email,
+        'password' => 'secret-password',
+    ], $headers)->assertOk();
+
+    postJson('/api/auth/logout', [], $headers)->assertOk();
+
+    getJson('/api/auth/user', $headers)->assertUnauthorized();
 });
 
 it('rejects inactive accounts at login', function () {
