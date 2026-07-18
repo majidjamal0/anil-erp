@@ -8,11 +8,21 @@ return new class extends Migration
 {
     public function up(): void
     {
-        foreach (['company_user' => 'company_id', 'branch_user' => 'branch_id', 'user_warehouse' => 'warehouse_id'] as $table => $foreign) {
-            Schema::create($table, function (Blueprint $t) use ($table, $foreign): void {
+        $tables = [
+            'company_user' => 'company_id',
+            'branch_user' => 'branch_id',
+            'user_warehouse' => 'warehouse_id',
+        ];
+
+        foreach ($tables as $table => $foreign) {
+            Schema::create($table, function (Blueprint $t) use ($foreign): void {
                 $t->uuid('id')->primary();
                 $t->foreignUuid('user_id')->constrained()->cascadeOnDelete();
-                $target = $foreign === 'company_id' ? 'companies' : ($foreign === 'branch_id' ? 'branches' : 'warehouses');
+                $target = match ($foreign) {
+                    'company_id' => 'companies',
+                    'branch_id' => 'branches',
+                    default => 'warehouses',
+                };
                 $t->foreignUuid($foreign)->constrained($target)->cascadeOnDelete();
                 $t->string('access_level')->default('view');
                 $t->boolean('is_default')->default(false);
@@ -21,6 +31,7 @@ return new class extends Migration
             });
         }
     }
+
     public function down(): void
     {
         Schema::dropIfExists('user_warehouse');
